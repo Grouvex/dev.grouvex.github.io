@@ -31,11 +31,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- Scripts -->
-    <script src="time.js"></script>
-    <script type="module" src="abc.js"></script>
-    <script src="index.js"></script>
-    
     <style>
         /* ============================================
            CSS Variables & Reset
@@ -77,8 +72,6 @@
         ============================================ */
         header {
             background: linear-gradient(135deg, var(--color-dark), #16213e);
-            padding: 1rem 2rem;
-            box-shadow: var(--shadow-lg);
         }
 
         /* ============================================
@@ -470,7 +463,9 @@
                 <option value="General">📢 General</option>
                 <option value="Reglamentos">📜 Reglamentos</option>
                 <option value="Recording">🎵 Recording</option>
+                <option value="Records" disabled>🎵 Records</option>
                 <option value="Animation">🎬 Animation</option>
+                <option value="Games" disabled>🎬 Games</option>
                 <option value="Design">🎨 Design</option>
                 <option value="Web">💻 Web</option>
             </select>
@@ -606,22 +601,35 @@
             const start = state.loadedCount;
             const end = start + CONFIG.ITEMS_PER_PAGE;
             const toRender = state.filteredAnuncios.slice(start, end);
-
+        
             if (state.loadedCount === 0) {
                 elements.contentGrid.innerHTML = '';
             }
-
+        
             toRender.forEach(anuncio => {
                 const card = createAnnouncementCard(anuncio);
                 elements.contentGrid.appendChild(card);
             });
-
+            
             state.loadedCount += toRender.length;
-
+        
             // Actualizar botón de carga
             const hasMore = state.loadedCount < state.filteredAnuncios.length;
             elements.loadMoreBtn.disabled = !hasMore;
             elements.loadMoreBtn.textContent = hasMore ? 'Cargar más anuncios' : '📭 No hay más anuncios';
+            
+            const procesarInsignias = (intento = 0) => {
+                if (typeof window.cargarDatosEInsigniasEnTodosLosElementos === 'function') {
+                    console.log(`🔄 Procesando insignias (intento ${intento + 1})`);
+                    window.cargarDatosEInsigniasEnTodosLosElementos();
+                } else if (intento < 10) {
+                    setTimeout(() => procesarInsignias(intento + 1), 100);
+                } else {
+                    console.error('❌ No se pudo cargar la función de insignias');
+                }
+            };
+            
+            procesarInsignias();
         }
 
         function createAnnouncementCard(anuncio) {
@@ -635,11 +643,12 @@
             card.innerHTML = `
                 <a href="${safeUrl}" class="card-link">
                     <div class="card-header">
-                        <img src="${sanitizeHTML(anuncio.userimagen)}" alt="${sanitizeHTML(anuncio.user)}" class="user-avatar" onerror="this.src='img/default-avatar.png'">
+                        <img src="${sanitizeHTML(anuncio.userimagen)}" alt="Logo del Anunciante" class="user-avatar" onerror="this.src='img/default-avatar.png'">
                         <div class="user-info">
                             <div class="user-name">
-                                ${sanitizeHTML(anuncio.user)}
+                                <span tigsID="${sanitizeHTML(anuncio.userID)}"></span>
                                 ${isNewAnnouncement ? '<span class="badge-new">NUEVO</span>' : ''}
+                                <span class="insignias-container"></span>
                             </div>
                             <div class="card-type">📌 ${sanitizeHTML(anuncio.tipo)}</div>
                         </div>
@@ -747,5 +756,8 @@
             init();
         }
     </script>
-</body>
+    <!-- Scripts -->
+    <script src="time.js"></script>
+    <script type="module" src="abc.js"></script>
+    <script src="index.js"></script></body>
 </html>
